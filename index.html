@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Les matchas de Justine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --matcha-deep:#4a6741;
+    --matcha:#7a9a63;
+    --matcha-soft:#a9c08e;
+    --cream:#faf7ee;
+    --paper:#f3ecd9;
+    --paper-2:#eee3c8;
+    --brown:#8a6a45;
+    --brown-deep:#5c452c;
+    --ink:#332b1f;
+    --ink-soft:#6b6152;
+    --white:#fffdf7;
+    --gold:#c79a4b;
+    --radius-lg:26px;
+    --radius-md:16px;
+    --radius-sm:10px;
+    --shadow-paper: 0 1px 0 rgba(51,43,31,.06), 0 10px 24px -14px rgba(76,63,38,.35);
+    --serif:'Shippori Mincho', 'Hiragino Mincho ProN', serif;
+    --sans:'Zen Kaku Gothic New','Hiragino Sans', sans-serif;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:inherit;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  html,body{margin:0;padding:0;background:var(--cream);}
+  body{
+    font-family:var(--sans);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(1200px 500px at 15% -10%, rgba(122,154,99,.10), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(199,154,75,.10), transparent 55%),
+      var(--cream);
+    overflow-x:hidden;
+  }
+  img{max-width:100%;display:block;}
+  button{font-family:inherit;}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px;}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    padding:64px 24px 40px;
+    text-align:center;
+    position:relative;
+  }
+  .hero-mark{
+    width:46px;height:46px;margin:0 auto 22px;
+    opacity:0;animation:riseIn .8s ease forwards;
+  }
+  .hero h1{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:clamp(2.3rem, 5.4vw, 3.6rem);
+    margin:0;
+    color:var(--brown-deep);
+    letter-spacing:.01em;
+    opacity:0;animation:riseIn .8s ease .08s forwards;
+  }
+  .hero p.tagline{
+    font-family:var(--serif);
+    font-style:italic;
+    font-size:1.05rem;
+    color:var(--ink-soft);
+    margin:14px 0 0;
+    opacity:0;animation:riseIn .8s ease .18s forwards;
+  }
+  @keyframes riseIn{from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)}}
+
+  .stats{
+    display:flex;justify-content:center;gap:14px;
+    margin-top:36px;flex-wrap:wrap;
+    opacity:0;animation:riseIn .8s ease .28s forwards;
+  }
+  .stat{
+    background:var(--white);
+    border:1px solid rgba(138,106,69,.16);
+    border-radius:var(--radius-md);
+    padding:14px 26px;
+    min-width:104px;
+    box-shadow:var(--shadow-paper);
+  }
+  .stat b{
+    display:block;font-family:var(--serif);font-size:1.7rem;color:var(--matcha-deep);font-weight:600;
+  }
+  .stat span{font-size:.78rem;color:var(--ink-soft);}
+
+  /* ---------- Section shell ---------- */
+  section{padding:34px 0;}
+  .section-head{
+    display:flex;align-items:baseline;justify-content:space-between;gap:16px;
+    margin-bottom:18px;flex-wrap:wrap;
+  }
+  .section-head h2{
+    font-family:var(--serif);font-weight:600;font-size:1.5rem;margin:0;color:var(--brown-deep);
+  }
+  .section-head p{margin:2px 0 0;color:var(--ink-soft);font-size:.9rem;}
+
+  /* ---------- Map ---------- */
+  .map-card{
+    background:var(--white);
+    border:1px solid rgba(138,106,69,.16);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-paper);
+    padding:14px;
+    position:relative;
+    overflow:hidden;
+  }
+  .map-card svg{
+    width:100%;height:auto;display:block;border-radius:18px;
+    touch-action:none;
+    cursor:grab;
+  }
+  .map-card svg.grabbing{cursor:grabbing;}
+  .map-bg{fill:#f5efdc;}
+  .graticule{stroke:rgba(138,106,69,.08);stroke-width:.6;}
+  .country{
+    fill:var(--matcha-soft);
+    fill-opacity:.62;
+    stroke:var(--brown);
+    stroke-opacity:.32;
+    stroke-width:.6;
+    vector-effect:non-scaling-stroke;
+    transition:fill-opacity .15s ease;
+  }
+  .country:hover{fill-opacity:.8;}
+  .marker{cursor:pointer;}
+  .marker circle.halo{fill:var(--matcha-deep);opacity:.16;}
+  .marker circle.dot{fill:var(--matcha-deep);stroke:var(--white);stroke-width:1.6;}
+  .marker:hover circle.dot{fill:var(--gold);}
+  .marker.placing{cursor:crosshair;}
+  .map-hint{
+    text-align:center;font-size:.82rem;color:var(--ink-soft);margin-top:10px;
+  }
+  .map-picker-note{
+    display:none;
+    text-align:center;font-size:.85rem;color:var(--brown-deep);
+    background:var(--paper);border-radius:var(--radius-sm);
+    padding:9px 14px;margin:10px auto 0;max-width:420px;
+  }
+  .map-picker-note.active{display:block;}
+
+  .map-controls{
+    position:absolute;right:26px;bottom:26px;
+    display:flex;flex-direction:column;gap:8px;
+    z-index:5;
+  }
+  .map-controls button{
+    width:34px;height:34px;border-radius:50%;
+    border:1px solid rgba(138,106,69,.22);
+    background:var(--white);color:var(--brown-deep);
+    font-size:1.05rem;line-height:1;cursor:pointer;
+    box-shadow:0 4px 10px -4px rgba(76,63,38,.4);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .map-controls button:hover{background:var(--paper);}
+  .map-controls button:active{transform:scale(.94);}
+
+  /* ---------- Gallery ---------- */
+  .gallery{
+    display:grid;grid-template-columns:repeat(auto-fill, minmax(230px,1fr));gap:18px;
+  }
+  .card{
+    background:var(--white);
+    border:1px solid rgba(138,106,69,.14);
+    border-radius:var(--radius-md);
+    overflow:hidden;
+    cursor:pointer;
+    transition:transform .25s ease, box-shadow .25s ease;
+    box-shadow:var(--shadow-paper);
+  }
+  .card:hover{transform:translateY(-4px);box-shadow:0 16px 30px -16px rgba(76,63,38,.4);}
+  .card .thumb{
+    height:150px;width:100%;
+    background:linear-gradient(135deg, var(--matcha-soft), var(--matcha));
+    display:flex;align-items:center;justify-content:center;
+    font-size:2.1rem;color:var(--white);
+  }
+  .card .thumb img{width:100%;height:100%;object-fit:cover;}
+  .card .body{padding:14px 16px 16px;}
+  .card h3{margin:0 0 4px;font-family:var(--serif);font-size:1.08rem;color:var(--brown-deep);}
+  .card .place{font-size:.83rem;color:var(--ink-soft);margin:0 0 8px;}
+  .card .meta{display:flex;justify-content:space-between;align-items:center;font-size:.78rem;color:var(--ink-soft);}
+  .stars{color:var(--gold);letter-spacing:1px;font-size:.85rem;}
+
+  .empty-state{
+    text-align:center;padding:50px 20px;color:var(--ink-soft);
+    background:var(--white);border:1px dashed rgba(138,106,69,.3);border-radius:var(--radius-md);
+  }
+
+  /* ---------- Floating add button ---------- */
+  .fab{
+    position:fixed;right:22px;bottom:calc(22px + env(safe-area-inset-bottom,0px));
+    background:var(--matcha-deep);color:var(--white);
+    border:none;border-radius:999px;
+    padding:15px 22px;font-size:.95rem;font-weight:500;
+    display:flex;align-items:center;gap:8px;
+    box-shadow:0 10px 26px -8px rgba(74,103,65,.55);
+    cursor:pointer;z-index:40;
+    transition:transform .2s ease, background .2s ease;
+  }
+  .fab:hover{background:var(--matcha);transform:translateY(-2px);}
+  .fab svg{width:18px;height:18px;}
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(51,43,31,.45);
+    display:none;align-items:flex-start;justify-content:center;
+    padding:5vh 16px;overflow-y:auto;z-index:60;
+    backdrop-filter:blur(2px);
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    background:var(--cream);
+    border-radius:var(--radius-lg);
+    max-width:520px;width:100%;
+    padding:30px 28px 28px;
+    box-shadow:0 30px 60px -20px rgba(51,43,31,.5);
+    position:relative;
+    margin:auto 0;
+  }
+  .modal-close{
+    position:absolute;top:16px;right:16px;
+    background:none;border:none;font-size:1.3rem;color:var(--ink-soft);
+    cursor:pointer;width:32px;height:32px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .modal-close:hover{background:rgba(138,106,69,.12);}
+  .modal h2{font-family:var(--serif);color:var(--brown-deep);margin:0 0 18px;font-size:1.4rem;}
+
+  form.entry-form label{
+    display:block;font-size:.82rem;color:var(--ink-soft);margin:14px 0 6px;
+  }
+  form.entry-form input[type=text],
+  form.entry-form input[type=date],
+  form.entry-form textarea{
+    width:100%;padding:10px 13px;border-radius:var(--radius-sm);
+    border:1px solid rgba(138,106,69,.28);background:var(--white);
+    font-family:var(--sans);font-size:.92rem;color:var(--ink);
+  }
+  form.entry-form textarea{min-height:78px;resize:vertical;}
+  form.entry-form input:focus,form.entry-form textarea:focus{
+    outline:2px solid var(--matcha-soft);outline-offset:1px;
+  }
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+  .rating-input{display:flex;gap:6px;margin-top:2px;}
+  .rating-input button{
+    background:none;border:none;font-size:1.5rem;line-height:1;
+    color:rgba(138,106,69,.35);cursor:pointer;padding:2px;
+  }
+  .rating-input button.active{color:var(--gold);}
+
+  .photo-drop{
+    border:1.5px dashed rgba(138,106,69,.35);border-radius:var(--radius-sm);
+    padding:16px;text-align:center;font-size:.85rem;color:var(--ink-soft);
+    cursor:pointer;background:var(--white);
+  }
+  .photo-drop:hover{border-color:var(--matcha);}
+  .photo-preview{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+  .photo-preview .ph{
+    width:64px;height:64px;border-radius:10px;overflow:hidden;position:relative;
+  }
+  .photo-preview .ph img{width:100%;height:100%;object-fit:cover;}
+  .photo-preview .ph button{
+    position:absolute;top:2px;right:2px;background:rgba(51,43,31,.65);color:#fff;
+    border:none;border-radius:50%;width:18px;height:18px;font-size:.65rem;cursor:pointer;
+  }
+
+  .locate-status{
+    font-size:.78rem;color:var(--ink-soft);margin-top:8px;min-height:16px;
+  }
+  .locate-status.ok{color:var(--matcha-deep);}
+  .locate-status.pending{color:var(--brown);}
+
+  .form-actions{
+    display:flex;justify-content:space-between;gap:10px;margin-top:22px;
+  }
+  .btn{
+    border:none;border-radius:999px;padding:11px 22px;font-size:.88rem;font-weight:500;cursor:pointer;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .btn-primary{background:var(--matcha-deep);color:var(--white);}
+  .btn-primary:hover{background:var(--matcha);}
+  .btn-primary:disabled{background:#c6c0ae;cursor:not-allowed;}
+  .btn-ghost{background:none;color:var(--ink-soft);}
+  .btn-ghost:hover{color:var(--ink);}
+  .btn-danger{background:none;color:#a3492f;}
+  .btn-danger:hover{text-decoration:underline;}
+
+  /* ---------- Detail modal ---------- */
+  .detail-photos{display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;border-radius:var(--radius-sm);}
+  .detail-photos img{height:190px;width:auto;border-radius:var(--radius-sm);flex:0 0 auto;}
+  .detail-photos .ph-empty{
+    height:150px;width:100%;border-radius:var(--radius-sm);
+    background:linear-gradient(135deg, var(--matcha-soft), var(--matcha));
+    display:flex;align-items:center;justify-content:center;font-size:2.4rem;color:var(--white);
+  }
+  .detail-place{font-size:.86rem;color:var(--ink-soft);margin:0 0 4px;}
+  .detail-date{font-size:.8rem;color:var(--ink-soft);margin:0 0 14px;}
+  .detail-note{font-size:.96rem;line-height:1.6;color:var(--ink);margin:0 0 16px;}
+  .detail-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:8px;}
+
+  footer{
+    text-align:center;padding:40px 20px 60px;color:var(--ink-soft);font-size:.8rem;
+  }
+  footer span{font-family:var(--serif);font-style:italic;}
+
+  @media (max-width:560px){
+    .hero{padding:46px 18px 30px;}
+    .row2{grid-template-columns:1fr;}
+    .fab span{display:none;}
+    .fab{padding:15px;border-radius:50%;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.01ms !important;transition-duration:.01ms !important;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ÉCRAN DE CONNEXION — bloque tout le reste tant qu'on n'est pas identifié -->
+<div class="overlay open" id="authOverlay" style="z-index:200;">
+  <div class="modal" style="max-width:380px;">
+    <svg width="40" height="40" viewBox="0 0 48 48" fill="none" style="display:block;margin:0 auto 14px;">
+      <path d="M12 20c0-8 5-14 12-14s12 6 12 14-6 18-12 18-12-10-12-18Z" stroke="#4a6741" stroke-width="2"/>
+      <path d="M24 6v6M17 9l2 4M31 9l-2 4" stroke="#7a9a63" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <h2 style="text-align:center;">Accès privé</h2>
+    <p style="text-align:center;color:var(--ink-soft);font-size:.88rem;margin-top:-8px;">Ce petit carnet est juste pour vous deux.</p>
+    <form class="entry-form" id="authForm">
+      <label for="authEmail">E-mail</label>
+      <input type="email" id="authEmail" required autocomplete="username">
+      <label for="authPassword">Mot de passe</label>
+      <input type="password" id="authPassword" required autocomplete="current-password">
+      <div id="authError" style="color:#a3492f;font-size:.82rem;min-height:16px;margin-top:10px;"></div>
+      <div class="form-actions" style="justify-content:center;">
+        <button type="submit" class="btn btn-primary" id="authSubmitBtn">Se connecter</button>
+      </div>
+    </form>
+    <p id="authConfigWarning" style="display:none;text-align:center;font-size:.82rem;color:var(--brown-deep);background:var(--paper);border-radius:var(--radius-sm);padding:12px 14px;margin-top:10px;">
+      La connexion au carnet en ligne n'est pas encore configurée dans ce fichier — suis les étapes de <b>SETUP.md</b> pour créer votre espace privé, puis renseigne les deux clés en haut du script.
+    </p>
+  </div>
+</div>
+
+<header class="hero">
+  <svg class="hero-mark" viewBox="0 0 48 48" fill="none">
+    <path d="M12 20c0-8 5-14 12-14s12 6 12 14-6 18-12 18-12-10-12-18Z" stroke="#4a6741" stroke-width="2"/>
+    <path d="M24 6v6M17 9l2 4M31 9l-2 4" stroke="#7a9a63" stroke-width="2" stroke-linecap="round"/>
+  </svg>
+  <h1>Les matchas de Justine</h1>
+  <p class="tagline">Un souvenir à chaque tasse.</p>
+  <div class="stats">
+    <div class="stat"><b id="statCount">0</b><span>matchas</span></div>
+    <div class="stat"><b id="statCountries">0</b><span>pays</span></div>
+    <div class="stat"><b id="statCities">0</b><span>villes</span></div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section id="mapSection">
+    <div class="section-head">
+      <div>
+        <h2>La carte</h2>
+        <p>Chaque tasse a laissé une trace quelque part dans le monde.</p>
+      </div>
+    </div>
+    <div class="map-card">
+      <svg id="worldMap" viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Carte du monde des souvenirs de matcha"></svg>
+      <div class="map-controls">
+        <button type="button" id="zoomInBtn" aria-label="Zoomer">+</button>
+        <button type="button" id="zoomOutBtn" aria-label="Dézoomer">−</button>
+        <button type="button" id="zoomResetBtn" aria-label="Réinitialiser la vue" style="font-size:.85rem;">⟲</button>
+      </div>
+    </div>
+    <p class="map-hint">Molette (ou pincement) pour zoomer, glisse pour te déplacer · touche un marqueur pour rouvrir un souvenir.</p>
+    <p class="map-picker-note" id="pickerNote">Touche la carte à l'endroit où tu as bu ce matcha ✨</p>
+  </section>
+
+  <section id="gallerySection">
+    <div class="section-head">
+      <div>
+        <h2>Le carnet</h2>
+        <p>Tous les souvenirs, tasse après tasse.</p>
+      </div>
+    </div>
+    <div class="gallery" id="gallery"></div>
+  </section>
+
+</main>
+
+<footer>
+  <span>fait avec un peu de mousse et beaucoup d'amour</span>
+  <div style="margin-top:10px;">
+    <button type="button" id="logoutBtn" style="background:none;border:none;color:var(--ink-soft);font-size:.78rem;text-decoration:underline;cursor:pointer;padding:4px;">Se déconnecter</button>
+  </div>
+</footer>
+
+<button class="fab" id="openAddBtn" aria-label="Ajouter un matcha">
+  <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+  <span>Ajouter un matcha</span>
+</button>
+
+<!-- ADD / EDIT MODAL -->
+<div class="overlay" id="formOverlay">
+  <div class="modal">
+    <button class="modal-close" id="closeFormBtn" aria-label="Fermer">&times;</button>
+    <h2 id="formTitle">+ Ajouter un matcha</h2>
+    <form class="entry-form" id="entryForm">
+      <input type="hidden" id="entryId">
+
+      <label for="fName">Nom du lieu</label>
+      <input type="text" id="fName" placeholder="ex. Tsujiri, petit salon près du temple…" required>
+
+      <div class="row2">
+        <div>
+          <label for="fCity">Ville</label>
+          <input type="text" id="fCity" placeholder="ex. Kyoto" required>
+        </div>
+        <div>
+          <label for="fCountry">Pays</label>
+          <input type="text" id="fCountry" placeholder="ex. Japon" required>
+        </div>
+      </div>
+
+      <label for="fDate">Date</label>
+      <input type="date" id="fDate">
+
+      <label>Photo(s)</label>
+      <div class="photo-drop" id="photoDrop">Touche ici pour ajouter une ou plusieurs photos</div>
+      <input type="file" id="fPhotos" accept="image/*" multiple style="display:none">
+      <div class="photo-preview" id="photoPreview"></div>
+
+      <label for="fNote">Petit souvenir</label>
+      <textarea id="fNote" placeholder="Ce qui rendait ce matcha spécial…"></textarea>
+
+      <label>Note (facultative)</label>
+      <div class="rating-input" id="ratingInput">
+        <button type="button" data-v="1">🍵</button>
+        <button type="button" data-v="2">🍵</button>
+        <button type="button" data-v="3">🍵</button>
+        <button type="button" data-v="4">🍵</button>
+        <button type="button" data-v="5">🍵</button>
+      </div>
+
+      <div id="locateStatus" class="locate-status"></div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" id="cancelFormBtn">Annuler</button>
+        <button type="submit" class="btn btn-primary" id="saveBtn">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="overlay" id="detailOverlay">
+  <div class="modal">
+    <button class="modal-close" id="closeDetailBtn" aria-label="Fermer">&times;</button>
+    <div id="detailContent"></div>
+    <div class="detail-actions">
+      <button class="btn btn-danger" id="deleteBtn">Supprimer</button>
+      <button class="btn btn-ghost" id="editBtn">Modifier</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============ Base de villes (approx., pour le placement automatique) ============ */
+  var CITY_COORDS = {
+    "tokyo":[35.6762,139.6503],"kyoto":[35.0116,135.7681],"osaka":[34.6937,135.5023],
+    "nagoya":[35.1815,136.9066],"fukuoka":[33.5904,130.4017],"sapporo":[43.0618,141.3545],
+    "yokohama":[35.4437,139.6380],"nara":[34.6851,135.8048],"hiroshima":[34.3853,132.4553],
+    "kanazawa":[36.5613,136.6562],
+    "barcelone":[41.3874,2.1686],"barcelona":[41.3874,2.1686],"madrid":[40.4168,-3.7038],
+    "seville":[37.3891,-5.9845],"valence":[39.4699,-0.3763],"grenade":[37.1773,-3.5986],
+    "bilbao":[43.2630,-2.9350],"malaga":[36.7213,-4.4214],"saint-sebastien":[43.3183,-1.9812],
+    "san sebastian":[43.3183,-1.9812],
+    "bangkok":[13.7563,100.5018],"chiang mai":[18.7883,98.9853],"phuket":[7.8804,98.3923],
+    "ayutthaya":[14.3532,100.5680],"krabi":[8.0863,98.9063],
+    "paris":[48.8566,2.3522],"lyon":[45.7640,4.8357],"marseille":[43.2965,5.3698],
+    "nice":[43.7102,7.2620],"bordeaux":[44.8378,-0.5792],"strasbourg":[48.5734,7.7521],
+    "toulouse":[43.6047,1.4442],
+    "londres":[51.5074,-0.1278],"london":[51.5074,-0.1278],"edimbourg":[55.9533,-3.1883],
+    "manchester":[53.4808,-2.2426],
+    "rome":[41.9028,12.4964],"milan":[45.4642,9.1900],"florence":[43.7696,11.2558],
+    "venise":[45.4408,12.3155],"naples":[40.8518,14.2681],
+    "berlin":[52.5200,13.4050],"munich":[48.1351,11.5820],"hambourg":[53.5511,9.9937],
+    "cologne":[50.9375,6.9603],
+    "amsterdam":[52.3676,4.9041],"rotterdam":[51.9244,4.4777],
+    "lisbonne":[38.7223,-9.1393],"lisbon":[38.7223,-9.1393],"porto":[41.1579,-8.6291],
+    "bruxelles":[50.8503,4.3517],"vienne":[48.2082,16.3738],"zurich":[47.3769,8.5417],
+    "geneve":[46.2044,6.1432],"prague":[50.0755,14.4378],"budapest":[47.4979,19.0402],
+    "varsovie":[52.2297,21.0122],"cracovie":[50.0647,19.9450],"athenes":[37.9838,23.7275],
+    "copenhague":[55.6761,12.5683],"stockholm":[59.3293,18.0686],"oslo":[59.9139,10.7522],
+    "helsinki":[60.1699,24.9384],"dublin":[53.3498,-6.2603],"reykjavik":[64.1466,-21.9426],
+    "istanbul":[41.0082,28.9784],"marrakech":[31.6295,-7.9811],"casablanca":[33.5731,-7.5898],
+    "le caire":[30.0444,31.2357],"cairo":[30.0444,31.2357],"le cap":[-33.9249,18.4241],
+    "cape town":[-33.9249,18.4241],"nairobi":[-1.2921,36.8219],"zanzibar":[-6.1659,39.2026],
+    "new york":[40.7128,-74.0060],"los angeles":[34.0522,-118.2437],
+    "san francisco":[37.7749,-122.4194],"chicago":[41.8781,-87.6298],"seattle":[47.6062,-122.3321],
+    "miami":[25.7617,-80.1918],"boston":[42.3601,-71.0589],"honolulu":[21.3069,-157.8583],
+    "toronto":[43.6532,-79.3832],"vancouver":[49.2827,-123.1207],"montreal":[45.5017,-73.5673],
+    "mexico":[19.4326,-99.1332],"cancun":[21.1619,-86.8515],"oaxaca":[17.0732,-96.7266],
+    "rio de janeiro":[-22.9068,-43.1729],"sao paulo":[-23.5505,-46.6333],
+    "buenos aires":[-34.6037,-58.3816],"lima":[-12.0464,-77.0428],"santiago":[-33.4489,-70.6693],
+    "bogota":[4.7110,-74.0721],"cusco":[-13.5320,-71.9675],
+    "seoul":[37.5665,126.9780],"busan":[35.1796,129.0756],
+    "pekin":[39.9042,116.4074],"beijing":[39.9042,116.4074],"shanghai":[31.2304,121.4737],
+    "hong kong":[22.3193,114.1694],"taipei":[25.0330,121.5654],
+    "singapour":[1.3521,103.8198],"singapore":[1.3521,103.8198],
+    "kuala lumpur":[3.1390,101.6869],"jakarta":[-6.2088,106.8456],"bali":[-8.6500,115.2167],
+    "denpasar":[-8.6500,115.2167],"hanoi":[21.0278,105.8342],
+    "ho chi minh":[10.8231,106.6297],"saigon":[10.8231,106.6297],
+    "siem reap":[13.3633,103.8564],"phnom penh":[11.5564,104.9282],
+    "manille":[14.5995,120.9842],"manila":[14.5995,120.9842],"yangon":[16.8661,96.1951],
+    "mumbai":[19.0760,72.8777],"delhi":[28.7041,77.1025],"jaipur":[26.9124,75.7873],"goa":[15.2993,74.1240],
+    "dubai":[25.2048,55.2708],"abou dabi":[24.4539,54.3773],"abu dhabi":[24.4539,54.3773],
+    "doha":[25.2854,51.5310],"tel aviv":[32.0853,34.7818],
+    "sydney":[-33.8688,151.2093],"melbourne":[-37.8136,144.9631],"brisbane":[-27.4698,153.0251],
+    "auckland":[-36.8485,174.7633],"wellington":[-41.2865,174.7762]
+  };
+
+  function normalize(s){
+    return (s||"").toString().trim().toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  }
+
+  /* ============ Projection carte (equirectangulaire, viewBox 1000x500) ============ */
+  function project(lat, lon){
+    var x = (lon + 180) / 360 * 1000;
+    var y = (90 - lat) / 180 * 500;
+    return {x:x, y:y};
+  }
+
+  /* ============ Carnet en ligne (Supabase) ============
+     Renseigne ces deux valeurs après avoir suivi SETUP.md — c'est la SEULE
+     modification nécessaire dans ce fichier pour le connecter à votre espace privé.
+     La clé "anon" n'est pas un secret à cacher : elle est prévue pour être visible
+     côté client. Ce qui protège vraiment vos données, ce sont les règles d'accès
+     (Row Level Security) activées côté serveur dans SETUP.md. */
+  var SUPABASE_URL = "https://fprvzxsaaqnikprocock.supabase.co/rest/v1/";
+  var SUPABASE_ANON_KEY = "sb_publishable_TQ_TKpuFTlqsDmWvwC94aw_YAYsuz0Z";
+  var PHOTOS_BUCKET = "matcha-photos";
+  var TABLE_NAME = "matcha_entries";
+
+  var configured = SUPABASE_URL.indexOf("REMPLACE_MOI") === -1 && SUPABASE_ANON_KEY.indexOf("REMPLACE_MOI") === -1;
+  var sb = configured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+  var entries = [];
+  var photoUrlCache = {};
+
+  function genId(){
+    if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "e-" + Date.now() + "-" + Math.random().toString(36).slice(2,8);
+  }
+
+  // renvoie une Promise<string|null> vers une URL affichable pour une photo
+  // stockée dans Supabase Storage (téléchargée puis convertie en URL locale).
+  function resolvePhotoUrl(path){
+    if(photoUrlCache[path]) return photoUrlCache[path];
+    var p = sb.storage.from(PHOTOS_BUCKET).download(path).then(function(res){
+      if(res.error){ console.error(res.error); return null; }
+      return URL.createObjectURL(res.data);
+    }).catch(function(){ return null; });
+    photoUrlCache[path] = p;
+    return p;
+  }
+
+  async function loadEntriesFromCloud(){
+    var res = await sb.from(TABLE_NAME).select("*").order("date", {ascending:false});
+    if(res.error){
+      alert("Impossible de charger les souvenirs : " + res.error.message);
+      return [];
+    }
+    return res.data.map(function(row){
+      return {
+        id: row.id, name: row.name, city: row.city, country: row.country,
+        date: row.date, lat: row.lat, lon: row.lon,
+        note: row.note, rating: row.rating, photos: row.photos || []
+      };
+    });
+  }
+
+  async function uploadNewPhoto(dataUrl){
+    var blob = await (await fetch(dataUrl)).blob();
+    var path = genId() + ".jpg";
+    var res = await sb.storage.from(PHOTOS_BUCKET).upload(path, blob, {contentType:"image/jpeg"});
+    if(res.error) throw res.error;
+    return path;
+  }
+
+  async function saveEntryToCloud(entry){
+    var row = {
+      id: entry.id, name: entry.name, city: entry.city, country: entry.country,
+      date: entry.date || null, lat: entry.lat, lon: entry.lon,
+      note: entry.note, rating: entry.rating || null, photos: entry.photos
+    };
+    var res = await sb.from(TABLE_NAME).upsert(row);
+    if(res.error) throw res.error;
+  }
+
+  async function deleteEntryFromCloud(entry){
+    if(entry.photos && entry.photos.length){
+      await sb.storage.from(PHOTOS_BUCKET).remove(entry.photos);
+    }
+    var res = await sb.from(TABLE_NAME).delete().eq("id", entry.id);
+    if(res.error) throw res.error;
+  }
+
+  /* ============ Carte du monde (tracés géographiques réels, projection équirectangulaire) ============
+     Les tracés ci-dessous viennent de Natural Earth (domaine public, échelle 1:110m),
+     simplifiés puis projetés pour correspondre exactement à project(lat,lon) ci-dessus. */
+  var COUNTRY_PATHS = [{"n":"Fiji","d":"M994.806,298.611L995.972,300.417L992.722,300.444L993.528,298.278Z"},{"n":"Tanzania","d":"M594.167,252.639L608.889,263L612,278.667L596,282L591,275.639L585.389,273.167L581.5,262.5L584.639,256.694L584.5,253.139Z"},{"n":"W. Sahara","d":"M475.917,173.167L475.889,173.889L466.75,177.972L464.083,190.75L452.611,191.667L452.722,190.5L459.028,190.278L468.361,175.333Z"},{"n":"Canada","d":"M158.778,113.889L152.51,111.284L146,108.806L141.891,103.264L137.389,97.778L130.994,90.78L127.459,87.33L123.667,83.917L108.333,82.472L108.361,56.361L126.862,55.074L145.972,54.5L159.1,55.693L171.627,57.219L183.471,59.053L194.583,61.167L204.588,60.701L214.704,60.455L224.863,60.432L234.994,60.632L245.027,61.053L254.896,61.689L264.543,62.536L273.917,63.583L268.241,65.812L262.922,68.11L253.251,72.889L244.713,77.874L237.139,83.028L242.53,86.921L247.5,90.889L259.82,93.639L271.472,96.806L279.289,94.796L287.389,92.972L285.395,84.924L283.028,76.889L292.852,77.908L302.416,79.172L311.679,80.67L320.611,82.389L327.844,87.901L334.299,93.545L340.095,99.297L345.333,105.139L331.899,108.933L319.278,113.25L316.278,118.918L313.5,124.611L301.361,124.972L293.46,127.008L285.763,129.236L278.275,131.644L271,134.222L270.694,124.028L262.82,119.828L254.5,115.833L241.719,114.563L228.751,113.81L215.691,113.584L202.639,113.889L191.704,113.327L180.708,113.139L169.713,113.327ZM345.556,107.444L349.234,113.898L352.583,120.389L344.048,118.967L335.361,117.778L340.265,112.571ZM281.194,49.028L288.533,50.91L295.354,52.887L301.691,54.948L307.58,57.083L313.056,59.285L318.153,61.546L327.333,66.222L321.341,72.059L316.194,77.972L308.771,75.385L300.875,72.947L292.492,70.674L283.611,68.583L290.617,65.786L298.194,63.111L294.67,59.539L290.719,55.997L286.261,52.491ZM204.111,47L205.667,57.833L195.311,58.612L185.25,59.611L177.407,55.345L168.333,51.222L185.475,48.821Z"},{"n":"United States of America","d":"M158.778,113.889L169.713,113.327L180.708,113.139L191.704,113.327L202.639,113.889L215.691,113.584L228.751,113.81L241.719,114.563L254.5,115.833L262.82,119.828L270.694,124.028L271,134.222L278.275,131.644L285.763,129.236L293.46,127.008L301.361,124.972L313.5,124.611L308.492,129.657L303.778,134.778L294.5,137.139L289.639,151.25L281.419,157.852L273.639,164.639L264.392,165.16L255.189,165.915L246.045,166.9L236.972,168.111L229.083,178.222L219.556,168.389L211.941,165.015L204.139,161.806L191.611,162.972L183.181,161.19L174.639,159.611L165.639,154.306L161.109,148.023L156.306,141.806L155.075,128.983L153.639,116.167ZM108.361,56.361L108.333,82.472L123.667,83.917L127.459,87.33L130.994,90.78L137.389,97.778L132.687,93.132L127.556,88.556L118.289,86.88L108.721,85.453L98.887,84.285L88.833,83.389L74.893,86.484L61.889,90.083L56.556,87.219L50.904,84.439L44.911,81.751L38.556,79.167L35.994,73.365L33.028,67.583L36.713,64.29L40.771,61.031L45.26,57.812L50.25,54.639L64.998,54.428L79.743,54.649L94.264,55.299Z"},{"n":"Kazakhstan","d":"M742.667,113.306L731.989,119.099L722.139,125.222L722.944,132.361L710.02,132.211L697.111,132.583L685.306,135.639L674.319,129.296L662.5,123.361L658.862,129.286L655.472,135.25L645.833,133.944L641.296,127.493L636.389,121.111L629.083,115.583L634.85,110.945L641.028,106.417L654.778,109.389L662.418,104.585L670.667,99.972L681.083,97.889L691.861,96.139L702.377,97.661L712.583,99.5L717.643,104.075L722.333,108.722L732.675,110.854Z"},{"n":"Uzbekistan","d":"M655.472,135.25L658.862,129.286L662.5,123.361L674.319,129.296L685.306,135.639L697.111,132.583L697.25,138.222L688.417,146.833L684.778,146.222L676.095,140.446L666.889,134.917Z"},{"n":"Papua New Guinea","d":"M891.667,257.222L901.611,260.722L902.056,271.194L891.75,275.333Z"},{"n":"Indonesia","d":"M891.667,257.222L891.75,275.333L883.139,264.972ZM827.444,238.5L822.222,260.167L806.167,258.139L804.611,244.417L818.389,246.028ZM789.917,253L784.944,261.722L773.889,244.944L782.389,244.222Z"},{"n":"Argentina","d":"M339.917,333.944L337.694,344.194L342.25,352.5L332.168,360.963L326.791,365.07L321.167,369.083L318.63,375.669L315.873,382.233L312.855,388.771L309.528,395.278L302.778,392.678L296.306,389.944L298.066,378.657L299.583,367.361L301.979,352.257L304.056,337.139L309.003,325.182L313.583,313.167L325.861,311.806L336.903,316.799L348.25,321.5Z"},{"n":"Chile","d":"M306.694,298.833L313.583,313.167L309.003,325.182L304.056,337.139L301.979,352.257L299.583,367.361L298.066,378.657L296.306,389.944L302.778,392.678L309.528,395.278L300.663,395.342L291.806,395.167L292.528,377.111L294.78,365.118L296.75,353.111L301.556,340.056L305.306,309.417L304.528,300.972Z"},{"n":"Dem. Rep. Congo","d":"M581.5,262.5L585.389,273.167L578.222,284.083L566.417,280.361L560.361,270.25L548.528,272.417L545.361,266.333L534.222,266.944L533.833,266.083L536.111,263.278L548.667,252.056L551.25,240.278L576.028,235.472L585.639,240.25L582.167,253.722L580.611,257.889Z"},{"n":"Somalia","d":"M615.528,254.667L616.278,239.111L632.75,227.778L635.972,218.306L641.806,220.444L629.333,242.056Z"},{"n":"Kenya","d":"M608.889,263L594.167,252.639L594.472,238.194L598.056,234.694L616.278,239.111L615.528,254.667Z"},{"n":"Sudan","d":"M568.25,227.139L563.5,219.056L566.222,195.611L569.444,188.889L585.931,188.591L602.417,188.889L606.694,200L601.194,209.944L594.361,225.889L587.083,222.75Z"},{"n":"Chad","d":"M566.222,195.611L563.5,219.056L549.889,228.083L542.444,229.389L540.278,214.278L544.167,193.361L541.25,186.5L553.875,190.89Z"},{"n":"Haiti","d":"M300.806,195.25L300.806,199.889L298.083,198.75Z"},{"n":"Dominican Rep.","d":"M300.806,199.889L300.806,195.25L303.306,194.778L310.222,198.306Z"},{"n":"Russia","d":"M636.389,121.111L634.944,133.861L628.889,133.722L620.057,131.416L611,129.361L606.167,119.167L611.306,112.222L600.114,108.547L588.306,105.278L583.538,99.588L578.278,93.972L575.806,90.361L577.722,84.778L577.972,81.944L586.5,76.778L583.418,67.458L581.557,62.808L579.417,58.167L586.389,56.778L596.331,58.93L605.575,61.277L614.147,63.798L622.083,66.472L634.111,63.476L647.194,60.834L661.313,58.594L676.389,56.806L680.281,54.328L684.528,51.883L689.175,49.475L694.278,47.111L708.696,46.078L723.639,45.417L732.232,43.799L741.439,42.312L751.268,40.97L761.707,39.786L772.726,38.776L784.266,37.953L796.246,37.33L808.556,36.917L812.982,41.238L816.583,45.583L835.358,45.21L854.191,45.438L872.608,46.258L890.194,47.639L906.262,49.403L921.13,51.605L934.725,54.192L947.056,57.111L960.432,56.894L973.822,57.047L987.063,57.567L1000,58.444L1000,69.5L998.25,75.056L985.693,78.532L974.167,82.389L964.151,82.907L954.278,83.694L952.171,90.647L950.333,97.611L941.102,96.762L931.75,96.167L926.237,91.397L920.194,86.722L907.645,86.141L895,86L889.654,88.886L884.613,91.848L875.361,97.972L884.17,100.138L892.639,102.528L889.056,115.417L881.519,122.349L874.639,129.444L863.278,132.722L862.889,132.222L863.861,117.25L857.229,110.23L849.861,103.361L836.578,107.135L824.111,111.417L815.685,112.364L807.389,113.528L798.187,112.709L788.892,112.156L779.54,111.873L770.167,111.861L756.194,108.889L743.75,113.056L742.667,113.306L732.675,110.854L722.333,108.722L717.643,104.075L712.583,99.5L702.377,97.661L691.861,96.139L681.083,97.889L670.667,99.972L662.418,104.585L654.778,109.389L641.028,106.417L634.85,110.945L629.083,115.583ZM563.139,99.083L554.611,98.806L559.083,96.694Z"},{"n":"Bahamas","d":"M282.806,179.972L283.639,180.083L284.611,182.389L282.194,181.722Z"},{"n":"Falkland Is.","d":"M330,394.028L333.333,392.361L338.75,394.167L331.389,395.278Z"},{"n":"Norway","d":"M586.389,56.778L579.417,58.167L568.401,57.97L557.361,58.028L550.168,62.046L543.818,66.165L538.178,70.367L533.139,74.639L530.639,86.5L522.651,82.086L513.861,77.861L521.22,74.286L529.25,70.861L534.309,67.046L539.934,63.298L546.22,59.629L553.278,56.056L569.935,56.136Z"},{"n":"Greenland","d":"M370.111,20.472L396.698,20.633L422.194,21.345L445.511,22.557L466.083,24.194L459.837,25.913L454.368,27.665L449.549,29.446L445.278,31.25L443.808,34.237L442.57,37.227L440.601,43.212L439.101,49.202L437.917,55.194L423.928,57.931L411.226,61.041L399.752,64.469L389.417,68.167L386.582,71.864L384.007,75.58L379.5,83.056L365.944,80.944L362.617,76.494L358.915,72.076L354.766,67.696L350.083,63.361L347.81,57.551L345.052,51.754L341.627,45.975L339.581,43.095L337.25,40.222L328.751,38.004L319.248,35.902L308.626,33.938L296.778,32.139L302.759,30.439L309.428,28.786L316.886,27.188L325.246,25.656L334.628,24.202L345.158,22.841L356.955,21.591Z"},{"n":"Fr. S. Antarctic Lands","d":"M691.5,385.056L695.917,386.278L695.222,388.083L690.972,388.25Z"},{"n":"Timor-Leste","d":"M847.139,274.694L851.778,273.333L852.694,274.083L847.472,276.083Z"},{"n":"South Africa","d":"M545.389,329.389L555.25,329.056L555.278,318.806L571.278,320.806L581.75,311.361L586.639,311.806L588.444,321.778L586.222,321.472L585.25,324.278L589.083,324.25L591.194,324.278L584.985,332.708L578.389,341.028L566.588,344.082L554.5,346.722L549.791,338.085ZM580.5,330.444L575,333L577.083,335.139L580.139,333.528Z"},{"n":"Lesotho","d":"M580.5,330.444L580.139,333.528L577.083,335.139L575,333Z"},{"n":"Mexico","d":"M174.639,159.611L183.181,161.19L191.611,162.972L204.139,161.806L211.941,165.015L219.556,168.389L229.083,178.222L228.139,187.667L237.694,199.611L254.722,198.611L252.389,200.528L243.806,209.611L231.778,206.528L220.188,201.307L208.361,196.333L202.546,186.404L196.417,176.556L182.028,174.611Z"},{"n":"Uruguay","d":"M339.917,333.944L345.719,338.924L351.75,343.806L337.694,344.194Z"},{"n":"Brazil","d":"M351.75,343.806L345.719,338.924L339.917,333.944L348.25,321.5L338.417,306.056L338.222,295.278L331.944,288.278L318.333,282.139L306.861,280.417L294.472,270.889L305.861,261.944L306.056,245.25L314.222,246.528L331.306,235.556L336.028,246.333L342.944,244.722L348.556,243.583L356.5,238.444L364.944,250.667L384.806,258.083L402.111,265.167L402.417,275L391.806,288.306L389.556,304.444L383.361,313.806L370.917,316.917L364.194,329.639L358.14,336.776Z"},{"n":"Bolivia","d":"M306.861,280.417L318.333,282.139L331.944,288.278L338.222,295.278L338.417,306.056L325.861,311.806L313.583,313.167L306.694,298.833Z"},{"n":"Peru","d":"M305.861,261.944L294.472,270.889L306.861,280.417L306.694,298.833L304.528,300.972L288.861,290.694L278.444,269.972L276.944,259.444L290.639,250.417Z"},{"n":"Colombia","d":"M314.222,246.528L306.056,245.25L305.861,261.944L290.639,250.417L280.944,246.167L285.75,239.306L283.667,229.944L285.139,225.917L301.861,217.278L300.111,230.583L311.611,237.5Z"},{"n":"Panama","d":"M285.139,225.917L283.667,229.944L269.528,227.139L270.694,223.417Z"},{"n":"Costa Rica","d":"M270.694,223.417L269.528,227.139L261.917,219.194L267.611,219.611Z"},{"n":"Nicaragua","d":"M267.611,219.611L261.917,219.194L257.444,213.944L269.028,208.333Z"},{"n":"Honduras","d":"M269.028,208.333L257.444,213.944L256.139,212.833L251.806,209.944L254.917,206.306Z"},{"n":"El Salvador","d":"M251.806,209.944L256.139,212.833L249.722,211.833Z"},{"n":"Guatemala","d":"M243.806,209.611L252.389,200.528L252.972,205.861L254.917,206.306L251.806,209.944L249.722,211.833Z"},{"n":"Belize","d":"M252.389,200.528L254.722,198.611L252.972,205.861Z"},{"n":"Venezuela","d":"M331.306,235.556L314.222,246.528L311.611,237.5L300.111,230.583L301.861,217.278L325.75,221.056L334,226.75Z"},{"n":"Guyana","d":"M342.944,244.722L336.028,246.333L331.306,235.556L334,226.75L341.25,233.417Z"},{"n":"Suriname","d":"M348.556,243.583L342.944,244.722L341.25,233.417L350.111,234Z"},{"n":"France","d":"M356.5,238.444L348.556,243.583L350.111,234ZM517.194,112.611L520.75,117.722L519,122.25L520.667,128.639L508.306,132.028L494.722,129.389L491.778,117.861L499.098,112.799L506.972,107.917L515.75,112.417Z"},{"n":"Ecuador","d":"M290.639,250.417L276.944,259.444L280.944,246.167Z"},{"n":"Puerto Rico","d":"M315.889,198.583L317.083,200.056L313.389,200.139L313.611,198.556Z"},{"n":"Jamaica","d":"M284.528,198.639L287.861,199.556L285.528,200.833Z"},{"n":"Cuba","d":"M271.472,185.583L282.361,187.472L287.444,191.083L284,194.833L281.333,190L272.722,188.361Z"},{"n":"Zimbabwe","d":"M586.639,311.806L581.75,311.361L570.167,299.278L584.083,293.083L591.25,296.417Z"},{"n":"Botswana","d":"M581.75,311.361L571.278,320.806L555.278,318.806L558.083,300.694L569.667,299.056L570.167,299.278Z"},{"n":"Namibia","d":"M555.278,318.806L555.25,329.056L545.389,329.389L539.611,311.417L532.583,298.056L548.532,298.59L564.5,298.667L569.667,299.056L558.083,300.694Z"},{"n":"Senegal","d":"M453.583,212.25L454.278,205.167L466.194,209.389L468.028,215.444L461.944,215.028L453.667,215.611L453.222,213.472L455.75,213.528L456.611,212.167Z"},{"n":"Mali","d":"M468.028,215.444L466.194,209.389L484.611,206.944L482.083,180.667L486.333,180.639L499.36,188.53L511.861,196.778L510.111,206.75L501.028,208.528L494.444,209.556L485,221.194L477.694,221.639Z"},{"n":"Mauritania","d":"M452.611,191.667L464.083,190.75L466.75,177.972L475.889,173.889L486.333,180.639L482.083,180.667L484.611,206.944L466.194,209.389L454.278,205.167Z"},{"n":"Benin","d":"M507.472,232.611L505.194,232.944L502.5,219.444L505.972,216.833L510.028,217.611Z"},{"n":"Niger","d":"M541.25,186.5L544.167,193.361L540.278,214.278L539.389,215.333L525.799,213.44L512.139,211.806L510.028,217.611L505.972,216.833L501.028,208.528L510.111,206.75L511.861,196.778L522.439,190.669L533.333,184.806Z"},{"n":"Nigeria","d":"M507.472,232.611L510.028,217.611L512.139,211.806L525.799,213.44L539.389,215.333L532.639,230.611L523.611,236.75Z"},{"n":"Cameroon","d":"M540.278,214.278L542.444,229.389L544.472,243.694L536.333,243.694L531.333,243.722L526.806,243.667L523.611,236.75L532.639,230.611L539.389,215.333Z"},{"n":"Togo","d":"M502.5,219.444L505.194,232.944L502.944,233.528L500.056,219.389Z"},{"n":"Ghana","d":"M500.056,219.389L502.944,233.528L492.056,236.139L492.139,223.222Z"},{"n":"Côte d'Ivoire","d":"M477.694,221.639L485,221.194L492.139,223.222L492.056,236.139L478.583,237.889L476.556,228.639Z"},{"n":"Guinea","d":"M461.944,215.028L468.028,215.444L477.694,221.639L476.556,228.639L471.583,226.639L463.194,225.278L457.972,219.333Z"},{"n":"Guinea-Bissau","d":"M453.667,215.611L461.944,215.028L457.972,219.333Z"},{"n":"Liberia","d":"M476.556,228.639L478.583,237.889L468.222,231.139L471.583,226.639Z"},{"n":"Sierra Leone","d":"M463.194,225.278L471.583,226.639L468.222,231.139Z"},{"n":"Burkina Faso","d":"M485,221.194L494.444,209.556L501.028,208.528L505.972,216.833L502.5,219.444L500.056,219.389L492.139,223.222Z"},{"n":"Central African Rep.","d":"M576.028,235.472L551.25,240.278L544.472,243.694L542.444,229.389L549.889,228.083L563.5,219.056L568.25,227.139Z"},{"n":"Congo","d":"M551.25,240.278L548.667,252.056L536.111,263.278L533.083,264L530.806,261.056L540.083,253.694L536.333,243.694L544.472,243.694Z"},{"n":"Gabon","d":"M531.333,243.722L536.333,243.694L540.083,253.694L530.806,261.056L526.361,247.194Z"},{"n":"Eq. Guinea","d":"M526.806,243.667L531.333,243.722L526.361,247.194Z"},{"n":"Zambia","d":"M585.389,273.167L591,275.639L592.25,288.806L584.083,293.083L570.167,299.278L569.667,299.056L564.5,298.667L560.917,285.833L566.417,280.361L578.222,284.083Z"},{"n":"Malawi","d":"M591,275.639L596,282L592.25,288.806Z"},{"n":"Mozambique","d":"M596,282L612,278.667L613.278,290.806L605.073,297.937L596.639,304.944L598.5,317L591.194,324.278L589.083,324.25L588.444,321.778L586.639,311.806L591.25,296.417L584.083,293.083L592.25,288.806Z"},{"n":"eSwatini","d":"M589.083,324.25L585.25,324.278L586.222,321.472L588.444,321.778Z"},{"n":"Angola","d":"M536.111,263.278L533.833,266.083L533.083,264ZM534.222,266.944L545.361,266.333L548.528,272.417L560.361,270.25L566.417,280.361L560.917,285.833L564.5,298.667L548.532,298.59L532.583,298.056L537.861,283.444Z"},{"n":"Burundi","d":"M584.639,256.694L581.5,262.5L580.611,257.889Z"},{"n":"Israel","d":"M599.222,159.139L598.75,160.028L597.722,159.639L597.028,162.917L598.333,162.528L597,168.056L596.722,167.333L595.194,163.278L597.583,158.083L599.5,157.556Z"},{"n":"Lebanon","d":"M599.5,157.556L597.583,158.083L600,153.778Z"},{"n":"Madagascar","d":"M637.611,284.639L640.222,292.306L635.674,305.814L630.833,319.278L622.333,319.417L622.111,298.361Z"},{"n":"Palestine","d":"M598.333,162.528L597.028,162.917L597.722,159.639L598.75,160.028Z"},{"n":"Gambia","d":"M453.583,212.25L456.611,212.167L455.75,213.528L453.222,213.472Z"},{"n":"Tunisia","d":"M526.333,165.806L521.139,157.389L523.389,147.361L531.917,157.944Z"},{"n":"Algeria","d":"M475.889,173.889L475.917,173.167L485.902,166.636L496.361,160.389L493.972,152.306L508.514,149.509L523.389,147.361L521.139,157.389L526.333,165.806L528.611,182.278L533.333,184.806L522.439,190.669L511.861,196.778L499.36,188.53L486.333,180.639Z"},{"n":"Jordan","d":"M598.75,160.028L599.222,159.139L607.75,157.278L608.889,160.667L597.111,168.444L597,168.056L598.333,162.528Z"},{"n":"United Arab Emirates","d":"M643.278,182.639L655.75,177.611L656.278,178.583L656.667,180.778L653.361,186.917Z"},{"n":"Qatar","d":"M641.139,181.25L641.694,177.75L643.306,178.333L642.75,181.583Z"},{"n":"Kuwait","d":"M633.25,166.722L634.5,170.694L629.361,169.167Z"},{"n":"Iraq","d":"M608.889,160.667L607.75,157.278L612.577,151.894L617.639,146.583L624.361,146.75L626.167,155.639L634.917,166.861L633.25,166.722L629.361,169.167L619.287,164.772Z"},{"n":"Oman","d":"M653.361,186.917L656.667,180.778L666.139,188.028L660.528,197.028L647.528,203.75L644.444,197.222Z"},{"n":"Vanuatu","d":"M963.306,293.528L962.861,290.639L964.194,291.472L964.639,293.722Z"},{"n":"Cambodia","d":"M784.944,216.139L792.278,210.361L798.278,210.556L789.806,220.861Z"},{"n":"Thailand","d":"M792.278,210.361L784.944,216.139L775.417,222.333L783.722,232.722L778.028,232.056L773.75,222.417L776.639,216.972L771.833,201.194L778.111,193.278L788.778,199.333Z"},{"n":"Laos","d":"M798.278,210.556L792.278,210.361L788.778,199.333L778.111,193.278L781.056,190.444L783.806,187.611L790.111,192.333Z"},{"n":"Myanmar","d":"M778.111,193.278L771.833,201.194L776.639,216.972L773.75,222.417L769.889,202.972L756.583,192.583L757.417,188.778L763.724,180.088L770.361,171.5L775.667,188.556L781.056,190.444Z"},{"n":"Vietnam","d":"M789.806,220.861L798.278,210.556L790.111,192.333L783.806,187.611L800.139,190.139L793.5,197.056L802.444,207.556L803.333,217.583Z"},{"n":"North Korea","d":"M862.889,132.222L863.278,132.722L856.528,142.75L850.472,145.139L845.194,139.083L853.875,135.531Z"},{"n":"South Korea","d":"M850.472,145.139L856.528,142.75L858.583,152.556L851.361,154.472Z"},{"n":"Mongolia","d":"M743.75,113.056L756.194,108.889L770.167,111.861L779.54,111.873L788.892,112.156L798.187,112.709L807.389,113.528L815.685,112.364L824.111,111.417L826.167,120.361L814.399,125.922L803.444,131.889L791.556,134.444L779.704,132.651L767.639,131.306L760.301,127.662L752.639,124.194L748.363,118.594Z"},{"n":"India","d":"M770.361,171.5L763.724,180.088L757.417,188.778L747.306,188.722L734.984,197.136L723.111,205.833L721.833,221.222L712.75,225.278L704.25,205.583L701.75,190.667L689.389,184.194L697.77,173.973L706.722,163.944L706.222,153.472L716.222,151.417L720.9,158.762L725.306,166.167L736.806,175.75L744.778,172.556L746.694,174.167L754.722,172.861Z"},{"n":"Bangladesh","d":"M757.417,188.778L756.583,192.583L747.306,188.722Z"},{"n":"Bhutan","d":"M754.722,172.861L746.694,174.167L750.056,171.389Z"},{"n":"Nepal","d":"M744.778,172.556L736.806,175.75L725.306,166.167L735.15,169.235Z"},{"n":"Pakistan","d":"M716.222,151.417L706.222,153.472L706.722,163.944L697.77,173.973L689.389,184.194L684.361,179.361L670.833,180.333L669.083,167.139L684.306,166.972L691.472,162.167L695.411,155.351L699.583,148.583L708.778,146.861Z"},{"n":"Afghanistan","d":"M684.778,146.222L688.417,146.833L698.329,146.295L708.278,146.056L708.778,146.861L699.583,148.583L695.411,155.351L691.472,162.167L684.306,166.972L669.083,167.139L670.028,150.972L677.321,148.515Z"},{"n":"Tajikistan","d":"M688.417,146.833L697.25,138.222L704.667,140.472L708.278,146.056L698.329,146.295Z"},{"n":"Kyrgyzstan","d":"M697.111,132.583L710.02,132.211L722.944,132.361L713.604,136.287L704.667,140.472L697.25,138.222Z"},{"n":"Turkmenistan","d":"M645.833,133.944L655.472,135.25L666.889,134.917L676.095,140.446L684.778,146.222L677.321,148.515L670.028,150.972L664.528,146.083L649.778,146.667Z"},{"n":"Iran","d":"M634.917,166.861L626.167,155.639L624.361,146.75L624.417,139.694L628.167,142.389L629.194,142.306L635.778,143.556L649.778,146.667L664.528,146.083L670.028,150.972L669.083,167.139L670.833,180.333L657.141,176.217L643.111,172.583Z"},{"n":"Syria","d":"M599.222,159.139L599.5,157.556L600,153.778L600.417,150.5L608.949,148.43L617.639,146.583L612.577,151.894L607.75,157.278Z"},{"n":"Armenia","d":"M629.194,142.306L628.167,142.389L624.417,139.694L621.056,135.861L624.917,135.417Z"},{"n":"Sweden","d":"M530.639,86.5L533.139,74.639L538.178,70.367L543.818,66.165L550.168,62.046L557.361,58.028L562.171,62.311L566.389,66.639L557.487,71.08L549.583,75.694L552.194,83.111L541.222,84.646Z"},{"n":"Belarus","d":"M578.278,93.972L583.538,99.588L588.306,105.278L576.767,105.799L565.361,106.722L565.222,100.25L573.583,95.5Z"},{"n":"Ukraine","d":"M588.306,105.278L600.114,108.547L611.306,112.222L606.167,119.167L597.25,122.944L592.889,122.306L582.222,124.194L578.417,123.639L580.889,117.083L573.944,116.056L563.083,117L561.361,115.5L562.667,113.639L565.361,106.722L576.767,105.799Z"},{"n":"Poland","d":"M565.222,100.25L565.361,106.722L562.667,113.639L552.361,112.5L541.722,108.028L539.222,100.667L554.611,98.806L563.139,99.083Z"},{"n":"Austria","d":"M547.167,116.333L545,119.861L538.361,120.806L529,119.75L526.639,117.972L537.778,114.222L547.111,115Z"},{"n":"Hungary","d":"M561.361,115.5L563.083,117L556.167,121.861L552.306,122.472L546,120.833L545,119.861L547.167,116.333Z"},{"n":"Moldova","d":"M573.944,116.056L580.889,117.083L578.417,123.639Z"},{"n":"Romania","d":"M578.417,123.639L582.222,124.194L579.333,128.583L571.175,127.756L562.944,127.139L556.167,121.861L563.083,117L573.944,116.056Z"},{"n":"Lithuania","d":"M573.583,95.5L565.222,100.25L563.139,99.083L559.083,96.694L558.5,94.361Z"},{"n":"Latvia","d":"M575.806,90.361L578.278,93.972L573.583,95.5L558.5,94.361L567.528,89.472Z"},{"n":"Estonia","d":"M577.722,84.778L575.806,90.361L567.528,89.472Z"},{"n":"Germany","d":"M539.222,100.667L541.722,108.028L537.778,114.222L526.639,117.972L520.75,117.722L517.194,112.611L516.778,110.75L517.111,108.889L519.194,101.444L523.694,97.333L527.556,97.278Z"},{"n":"Bulgaria","d":"M562.944,127.139L571.175,127.756L579.333,128.583L577.778,133.306L572.556,133.806L563.75,135.167L562.167,132.444Z"},{"n":"Greece","d":"M563.75,135.167L572.556,133.806L572.389,136.611L564.108,138.173L555.972,139.944L558.389,136.556Z"},{"n":"Turkey","d":"M624.361,146.75L617.639,146.583L608.949,148.43L600.417,150.5L588.661,149.124L576.778,148.167L581.222,135.5L589.728,134.936L598.277,134.599L606.847,134.49L615.417,134.611L621.056,135.861L624.417,139.694ZM572.556,133.806L577.778,133.306L572.389,136.611Z"},{"n":"Albania","d":"M558.389,136.556L555.972,139.944L553.806,133.667L555.75,131.694L557.194,133.722Z"},{"n":"Croatia","d":"M546,120.833L552.306,122.472L552.806,125.389L551.556,131.528L551.25,132L544.5,129.139L538.111,123.611Z"},{"n":"Switzerland","d":"M526.639,117.972L529,119.75L519,122.25L520.75,117.722Z"},{"n":"Luxembourg","d":"M516.778,110.75L517.194,112.611L515.75,112.417Z"},{"n":"Belgium","d":"M517.111,108.889L516.778,110.75L515.75,112.417L506.972,107.917L509.222,107.361Z"},{"n":"Netherlands","d":"M519.194,101.444L517.111,108.889L509.222,107.361Z"},{"n":"Portugal","d":"M474.917,133.667L479.306,146.944L473.528,142.389Z"},{"n":"Spain","d":"M479.306,146.944L474.917,133.667L484.697,131.374L494.722,129.389L508.306,132.028L503.028,138.696L498.111,145.444L488.674,146.06Z"},{"n":"Ireland","d":"M482.778,100.361L476.222,106.472L473.083,100.333L478.972,96.861Z"},{"n":"New Caledonia","d":"M960.5,308.556L959.639,310.222L956.028,306.778L956.833,305.889Z"},{"n":"Solomon Is.","d":"M943.444,272.278L944.222,273.722L940.528,271.528L939.889,270.333Z"},{"n":"New Zealand","d":"M971.306,371L978.056,363.778L984.028,366.028L977.477,372.865L970.361,379.556L964.028,375.306Z"},{"n":"Australia","d":"M850.417,339.5L839.312,343.629L827.833,347.389L821.667,339.472L818.196,328.612L814.972,317.722L818.472,310.639L835.722,304.667L849.139,289.528L859.472,290.056L870.972,282.75L878.802,290.548L886.833,298.25L893.611,291.778L903.806,291.611L906.639,302.667L915.424,311.519L924.611,320.194L924.694,337.889L920.902,344.55L916.889,351.167L906.444,358.444L898.5,357.123L890.667,355.611L881.524,348.227L872.972,340.611L864.806,337.5Z"},{"n":"Sri Lanka","d":"M727.194,229.111L723.194,233.417L721.389,227.222Z"},{"n":"China","d":"M722.944,132.361L722.139,125.222L731.989,119.099L742.667,113.306L743.75,113.056L748.363,118.594L752.639,124.194L760.301,127.662L767.639,131.306L779.704,132.651L791.556,134.444L803.444,131.889L814.399,125.922L826.167,120.361L824.111,111.417L836.578,107.135L849.861,103.361L857.229,110.23L863.861,117.25L862.889,132.222L853.875,135.531L845.194,139.083L835.754,140.601L826.472,142.389L833.142,154.705L839.139,167.139L834.262,174.443L829.611,181.806L820.033,185.871L810.667,190.139L800.139,190.139L783.806,187.611L781.056,190.444L775.667,188.556L770.361,171.5L754.722,172.861L750.056,171.389L746.694,174.167L744.778,172.556L735.15,169.235L725.306,166.167L720.9,158.762L716.222,151.417L708.778,146.861L708.278,146.056L704.667,140.472L713.604,136.287Z"},{"n":"Taiwan","d":"M838.278,182.25L835.417,188.972L833.639,184.556Z"},{"n":"Italy","d":"M529,119.75L538.361,120.806L538.722,123.361L534.25,123.944L534.972,127.528L544.139,134.611L533.639,134.167L527.257,131.337L520.667,128.639L519,122.25Z"},{"n":"Denmark","d":"M527.556,97.278L523.694,97.333L522.472,92.944L528.472,91.972Z"},{"n":"United Kingdom","d":"M491.417,101.667L484.472,96.361L486.083,87.139L490.324,91.031L494.252,94.971L497.903,98.953L501.306,102.972L501.528,108.972L489.944,110.472Z"},{"n":"Iceland","d":"M459.694,65.389L462.194,69.083L454.973,71.287L448.167,73.611L442.833,67.417Z"},{"n":"Azerbaijan","d":"M628.889,133.722L634.944,133.861L635.778,143.556L629.194,142.306L624.917,135.417Z"},{"n":"Georgia","d":"M611,129.361L620.057,131.416L628.889,133.722L624.917,135.417L621.056,135.861L615.417,134.611Z"},{"n":"Philippines","d":"M839.833,199.389L837.944,205.75L833.528,208.417L835.333,198.583Z"},{"n":"Malaysia","d":"M827.444,238.5L818.389,246.028L804.611,244.417L817.222,237.417L820.417,238L820.694,234.861Z"},{"n":"Brunei","d":"M820.694,234.861L820.417,238L817.222,237.417Z"},{"n":"Slovenia","d":"M538.361,120.806L545,119.861L546,120.833L538.111,123.611L538.722,123.361Z"},{"n":"Finland","d":"M579.417,58.167L581.557,62.808L583.418,67.458L586.5,76.778L577.972,81.944L568.567,78.889L558.5,76.083L562.201,71.342L566.389,66.639L562.171,62.311L557.361,58.028L568.401,57.97Z"},{"n":"Slovakia","d":"M562.667,113.639L561.361,115.5L547.167,116.333L547.111,115L552.361,112.5Z"},{"n":"Czechia","d":"M541.722,108.028L552.361,112.5L547.111,115L537.778,114.222Z"},{"n":"Eritrea","d":"M601.194,209.944L606.694,200L619.667,214.722L617.639,215.167Z"},{"n":"Japan","d":"M894.111,141.167L889.964,147.406L886.056,153.694L876.889,151.306L885.29,146.124Z"},{"n":"Paraguay","d":"M338.417,306.056L348.25,321.5L336.903,316.799L325.861,311.806Z"},{"n":"Yemen","d":"M644.444,197.222L647.528,203.75L635.222,211.111L620.778,214.889L618.833,204.583L631.544,200.753Z"},{"n":"Saudi Arabia","d":"M597.111,168.444L608.889,160.667L619.287,164.772L629.361,169.167L634.5,170.694L641.139,181.25L642.75,181.583L643.278,182.639L653.361,186.917L644.444,197.222L631.544,200.753L618.833,204.583L608.722,190.861L603.111,179.612Z"},{"n":"Antarctica","d":"M0,500L0,500L0,485.306L18.522,486.285L39.55,487.053L62.763,487.57L87.417,487.806L85.162,484.959L83.624,482.109L82.507,479.259L81.659,476.408L80.454,470.705L79.639,465L92.693,463.139L104.447,461.063L114.985,458.803L124.417,456.389L137.557,456.774L150.841,456.875L164.101,456.69L177.167,456.222L187.39,457.232L198.052,458.066L209.089,458.714L220.417,459.167L229.819,457.761L238.603,456.223L246.785,454.567L254.389,452.806L271.377,454.63L289.539,455.928L308.531,456.654L327.889,456.778L319.058,459.755L308.885,462.595L297.126,465.265L283.528,467.722L291.308,470.211L300.463,472.618L311.32,474.919L324.278,477.083L350.799,476.966L376.369,476.233L399.872,474.94L420.694,473.167L419.778,462.972L429.376,461.599L438.295,460.101L446.559,458.491L454.203,456.783L461.265,454.986L467.788,453.113L473.815,451.17L479.389,449.167L491.871,448.405L503.938,447.358L515.495,446.04L526.472,444.472L538.404,445.227L550.592,445.691L562.918,445.857L575.25,445.722L585.552,444.824L595.502,443.72L605.053,442.421L614.173,440.941L622.845,439.293L631.06,437.491L638.821,435.546L646.139,433.472L656.753,435.201L667.871,436.66L679.434,437.83L691.361,438.694L703.097,440.976L715.667,442.944L723.159,439.874L729.944,436.694L740.863,437.163L751.892,437.362L762.942,437.29L773.924,436.947L784.749,436.337L795.339,435.469L805.626,434.353L815.556,433L825.386,434.936L835.75,436.639L846.5,436.21L857.074,435.524L867.4,434.59L877.417,433.417L889.144,435.705L901.625,437.66L914.797,439.249L928.556,440.444L938.967,443.022L950.273,445.357L962.487,447.417L975.583,449.167L969.018,452.933L961.361,456.611L958.509,461.205L954.91,465.783L952.731,468.064L950.221,470.339L947.301,472.605L943.861,474.861L952.933,477.661L964.535,480.368L971.595,481.675L979.716,482.94L989.104,484.155L1000,485.306L1000,485.306L1000,500L1000,500L1000,500L500,500L0,500Z"},{"n":"N. Cyprus","d":"M590.917,152.389L593.528,151.75L594.361,152.611Z"},{"n":"Cyprus","d":"M590.917,152.389L594.361,152.611L591.611,153.972Z"},{"n":"Morocco","d":"M493.972,152.306L496.361,160.389L485.902,166.636L475.917,173.167L468.361,175.333L459.028,190.278L452.722,190.5L459.889,177.083L466.55,171.912L473.444,166.861L478.32,158.728L483.528,150.667Z"},{"n":"Egypt","d":"M602.417,188.889L585.931,188.591L569.444,188.889L569.889,162.306L582.565,162.568L595.194,163.278L596.722,167.333L592.639,173.056L597.641,180.944Z"},{"n":"Libya","d":"M569.444,188.889L566.222,195.611L553.875,190.89L541.25,186.5L533.333,184.806L528.611,182.278L526.333,165.806L531.917,157.944L542.636,161.774L553.028,165.917L557.917,159.139L569.889,162.306Z"},{"n":"Ethiopia","d":"M632.75,227.778L616.278,239.111L598.056,234.694L594.361,225.889L601.194,209.944L617.639,215.167L618.833,219.639Z"},{"n":"Djibouti","d":"M617.639,215.167L619.667,214.722L619.861,218.167L618.833,219.639Z"},{"n":"Somaliland","d":"M635.972,218.306L632.75,227.778L618.833,219.639L619.861,218.167Z"},{"n":"Uganda","d":"M594.167,252.639L584.5,253.139L582.167,253.722L585.639,240.25L594.472,238.194Z"},{"n":"Rwanda","d":"M584.5,253.139L584.639,256.694L580.611,257.889L582.167,253.722Z"},{"n":"Bosnia and Herz.","d":"M551.556,131.528L552.806,125.389L553.389,129.111Z"},{"n":"North Macedonia","d":"M562.167,132.444L563.75,135.167L558.389,136.556L557.194,133.722L559.944,132.639Z"},{"n":"Serbia","d":"M552.306,122.472L556.167,121.861L562.944,127.139L562.167,132.444L559.944,132.639L556.278,131.083L553.389,129.111L552.806,125.389Z"},{"n":"Montenegro","d":"M555.75,131.694L553.806,133.667L551.25,132L551.556,131.528L553.389,129.111L556.278,131.083Z"},{"n":"Kosovo","d":"M557.194,133.722L555.75,131.694L556.278,131.083L559.944,132.639Z"},{"n":"Trinidad and Tobago","d":"M328.667,220.111L330.861,219.833L330.75,221.917L328.417,222.222Z"},{"n":"S. Sudan","d":"M585.639,240.25L576.028,235.472L568.25,227.139L587.083,222.75L594.361,225.889L598.056,234.694L594.472,238.194Z"}];
+
+  var svgNS = "http://www.w3.org/2000/svg";
+  var mapEl = document.getElementById("worldMap");
+  var zoomLayer, markersGroupEl;
+
+  function buildMapBase(){
+    var bg = document.createElementNS(svgNS,"rect");
+    bg.setAttribute("x",0);bg.setAttribute("y",0);
+    bg.setAttribute("width",1000);bg.setAttribute("height",500);
+    bg.setAttribute("class","map-bg");
+    mapEl.appendChild(bg);
+
+    zoomLayer = document.createElementNS(svgNS,"g");
+    zoomLayer.setAttribute("id","zoomLayer");
+    mapEl.appendChild(zoomLayer);
+
+    // fine grille de méridiens/parallèles tous les 30°, très discrète
+    for(var gx=0; gx<=1000; gx+=1000/12){
+      var l = document.createElementNS(svgNS,"line");
+      l.setAttribute("x1",gx);l.setAttribute("y1",0);l.setAttribute("x2",gx);l.setAttribute("y2",500);
+      l.setAttribute("class","graticule");
+      zoomLayer.appendChild(l);
+    }
+    for(var gy=0; gy<=500; gy+=500/6){
+      var l2 = document.createElementNS(svgNS,"line");
+      l2.setAttribute("x1",0);l2.setAttribute("y1",gy);l2.setAttribute("x2",1000);l2.setAttribute("y2",gy);
+      l2.setAttribute("class","graticule");
+      zoomLayer.appendChild(l2);
+    }
+
+    var countriesGroup = document.createElementNS(svgNS,"g");
+    countriesGroup.setAttribute("id","countriesGroup");
+    COUNTRY_PATHS.forEach(function(c){
+      var p = document.createElementNS(svgNS,"path");
+      p.setAttribute("d", c.d);
+      p.setAttribute("class","country");
+      var title = document.createElementNS(svgNS,"title");
+      title.textContent = c.n;
+      p.appendChild(title);
+      countriesGroup.appendChild(p);
+    });
+    zoomLayer.appendChild(countriesGroup);
+
+    markersGroupEl = document.createElementNS(svgNS,"g");
+    markersGroupEl.setAttribute("id","markersGroup");
+    zoomLayer.appendChild(markersGroupEl);
+  }
+
+  function renderMarkers(){
+    var g = markersGroupEl;
+    while(g.firstChild) g.removeChild(g.firstChild);
+    entries.forEach(function(entry){
+      if(typeof entry.lat !== "number" || typeof entry.lon !== "number") return;
+      var pos = project(entry.lat, entry.lon);
+      var m = document.createElementNS(svgNS,"g");
+      m.setAttribute("class","marker");
+      m.setAttribute("tabindex","0");
+      m.setAttribute("role","button");
+      m.setAttribute("aria-label", entry.name + ", " + entry.city);
+      // groupe extérieur positionné au point ; groupe intérieur contre-scalé
+      // pour que le marqueur garde toujours la même taille à l'écran, quel que soit le zoom.
+      m.setAttribute("transform","translate("+pos.x+","+pos.y+")");
+
+      var inner = document.createElementNS(svgNS,"g");
+      inner.setAttribute("class","marker-inner");
+      inner.setAttribute("transform","scale("+(1/mapView.scale)+")");
+
+      var halo = document.createElementNS(svgNS,"circle");
+      halo.setAttribute("class","halo");
+      halo.setAttribute("cx",0);halo.setAttribute("cy",0);halo.setAttribute("r",10);
+      inner.appendChild(halo);
+
+      var dot = document.createElementNS(svgNS,"circle");
+      dot.setAttribute("class","dot");
+      dot.setAttribute("cx",0);dot.setAttribute("cy",0);dot.setAttribute("r",5.5);
+      inner.appendChild(dot);
+
+      m.appendChild(inner);
+
+      m.addEventListener("click", function(){ openDetail(entry.id); });
+      m.addEventListener("keydown", function(ev){
+        if(ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); openDetail(entry.id); }
+      });
+
+      g.appendChild(m);
+    });
+  }
+
+  buildMapBase();
+
+  /* ============ Zoom & déplacement (pan) de la carte ============ */
+  var mapView = { scale:1, tx:0, ty:0, minScale:1, maxScale:9 };
+
+  function applyMapTransform(){
+    zoomLayer.setAttribute("transform","translate("+mapView.tx+","+mapView.ty+") scale("+mapView.scale+")");
+    // recontre-scale chaque marqueur pour garder une taille constante à l'écran
+    var inners = markersGroupEl.querySelectorAll(".marker-inner");
+    for(var i=0;i<inners.length;i++){
+      inners[i].setAttribute("transform","scale("+(1/mapView.scale)+")");
+    }
+  }
+
+  function clampMapView(){
+    // empêche de faire glisser la carte trop loin en dehors du cadre
+    var minTx = 1000 - 1000*mapView.scale, minTy = 500 - 500*mapView.scale;
+    mapView.tx = Math.min(0, Math.max(minTx, mapView.tx));
+    mapView.ty = Math.min(0, Math.max(minTy, mapView.ty));
+  }
+
+  function svgPoint(clientX, clientY){
+    var rect = mapEl.getBoundingClientRect();
+    var scaleX = 1000/rect.width, scaleY = 500/rect.height;
+    return { x:(clientX-rect.left)*scaleX, y:(clientY-rect.top)*scaleY };
+  }
+
+  function zoomAt(clientX, clientY, factor){
+    var pt = svgPoint(clientX, clientY);
+    // position dans l'espace non transformé avant zoom
+    var worldX = (pt.x - mapView.tx)/mapView.scale;
+    var worldY = (pt.y - mapView.ty)/mapView.scale;
+    mapView.scale = Math.min(mapView.maxScale, Math.max(mapView.minScale, mapView.scale*factor));
+    mapView.tx = pt.x - worldX*mapView.scale;
+    mapView.ty = pt.y - worldY*mapView.scale;
+    clampMapView();
+    applyMapTransform();
+  }
+
+  mapEl.addEventListener("wheel", function(e){
+    if(pickingOnMap){ /* on laisse quand même zoomer pendant le placement */ }
+    e.preventDefault();
+    var factor = e.deltaY < 0 ? 1.18 : 1/1.18;
+    zoomAt(e.clientX, e.clientY, factor);
+  }, {passive:false});
+
+  document.getElementById("zoomInBtn").addEventListener("click", function(){
+    var rect = mapEl.getBoundingClientRect();
+    zoomAt(rect.left+rect.width/2, rect.top+rect.height/2, 1.35);
+  });
+  document.getElementById("zoomOutBtn").addEventListener("click", function(){
+    var rect = mapEl.getBoundingClientRect();
+    zoomAt(rect.left+rect.width/2, rect.top+rect.height/2, 1/1.35);
+  });
+  document.getElementById("zoomResetBtn").addEventListener("click", function(){
+    mapView.scale = 1; mapView.tx = 0; mapView.ty = 0;
+    applyMapTransform();
+  });
+
+  /* glisser pour déplacer (souris) + doigt (tactile, y compris pincement à deux doigts) */
+  var activePointers = {};
+  var dragLast = null;
+  var pinchStartDist = null;
+  var pinchStartScale = null;
+
+  function pointersArray(){ return Object.keys(activePointers).map(function(k){return activePointers[k];}); }
+  function dist(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
+
+  mapEl.addEventListener("pointerdown", function(e){
+    if(pickingOnMap) return; // en mode "placer un lieu", le clic sert à poser le marqueur
+    mapEl.setPointerCapture(e.pointerId);
+    activePointers[e.pointerId] = {x:e.clientX, y:e.clientY};
+    var pts = pointersArray();
+    if(pts.length === 1){
+      dragLast = {x:e.clientX, y:e.clientY};
+      mapEl.classList.add("grabbing");
+    } else if(pts.length === 2){
+      pinchStartDist = dist(pts[0], pts[1]);
+      pinchStartScale = mapView.scale;
+      dragLast = null;
+    }
+  });
+  mapEl.addEventListener("pointermove", function(e){
+    if(!activePointers[e.pointerId]) return;
+    activePointers[e.pointerId] = {x:e.clientX, y:e.clientY};
+    var pts = pointersArray();
+    if(pts.length === 1 && dragLast){
+      var dx = e.clientX - dragLast.x, dy = e.clientY - dragLast.y;
+      var rect = mapEl.getBoundingClientRect();
+      mapView.tx += dx*(1000/rect.width);
+      mapView.ty += dy*(500/rect.height);
+      clampMapView();
+      applyMapTransform();
+      dragLast = {x:e.clientX, y:e.clientY};
+    } else if(pts.length === 2 && pinchStartDist){
+      var d = dist(pts[0], pts[1]);
+      var midClient = {x:(pts[0].x+pts[1].x)/2, y:(pts[0].y+pts[1].y)/2};
+      var targetScale = Math.min(mapView.maxScale, Math.max(mapView.minScale, pinchStartScale*(d/pinchStartDist)));
+      var factor = targetScale/mapView.scale;
+      if(isFinite(factor) && factor>0) zoomAt(midClient.x, midClient.y, factor);
+    }
+  });
+  function releasePointer(e){
+    delete activePointers[e.pointerId];
+    var pts = pointersArray();
+    if(pts.length < 2){ pinchStartDist = null; }
+    if(pts.length === 0){ dragLast = null; mapEl.classList.remove("grabbing"); }
+  }
+  mapEl.addEventListener("pointerup", releasePointer);
+  mapEl.addEventListener("pointercancel", releasePointer);
+  mapEl.addEventListener("pointerleave", function(e){ if(Object.keys(activePointers).length<=1) releasePointer(e); });
+
+  /* ============ Stats ============ */
+  function refreshStats(){
+    document.getElementById("statCount").textContent = entries.length;
+    var countries = new Set(entries.map(function(e){return normalize(e.country);}));
+    var cities = new Set(entries.map(function(e){return normalize(e.city);}));
+    document.getElementById("statCountries").textContent = countries.size;
+    document.getElementById("statCities").textContent = cities.size;
+  }
+
+  /* ============ Galerie ============ */
+  function ratingStars(n){
+    n = n || 0;
+    var s = "";
+    for(var i=1;i<=5;i++) s += (i<=n ? "★" : "☆");
+    return s;
+  }
+
+  function formatDate(d){
+    if(!d) return "";
+    var parts = d.split("-");
+    if(parts.length!==3) return d;
+    var months = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+    return parseInt(parts[2],10) + " " + months[parseInt(parts[1],10)-1] + " " + parts[0];
+  }
+
+  function renderGallery(){
+    var g = document.getElementById("gallery");
+    g.innerHTML = "";
+    if(entries.length === 0){
+      g.innerHTML = "";
+      var empty = document.createElement("div");
+      empty.className = "empty-state";
+      empty.textContent = "Pas encore de souvenir ici. Touche « Ajouter un matcha » pour commencer le carnet.";
+      g.appendChild(empty);
+      return;
+    }
+    var sorted = entries.slice().sort(function(a,b){
+      return (b.date||"").localeCompare(a.date||"");
+    });
+    sorted.forEach(function(entry){
+      var card = document.createElement("div");
+      card.className = "card";
+      card.addEventListener("click", function(){ openDetail(entry.id); });
+
+      var thumb = document.createElement("div");
+      thumb.className = "thumb";
+      if(entry.photos && entry.photos.length){
+        var img = document.createElement("img");
+        img.alt = entry.name;
+        thumb.appendChild(img);
+        resolvePhotoUrl(entry.photos[0]).then(function(url){ if(url) img.src = url; });
+      } else {
+        thumb.textContent = "🍵";
+      }
+      card.appendChild(thumb);
+
+      var body = document.createElement("div");
+      body.className = "body";
+      var h3 = document.createElement("h3");
+      h3.textContent = entry.name;
+      var place = document.createElement("p");
+      place.className = "place";
+      place.textContent = entry.city + ", " + entry.country;
+      var meta = document.createElement("div");
+      meta.className = "meta";
+      var dateSpan = document.createElement("span");
+      dateSpan.textContent = formatDate(entry.date);
+      var starSpan = document.createElement("span");
+      starSpan.className = "stars";
+      starSpan.textContent = entry.rating ? ratingStars(entry.rating) : "";
+      meta.appendChild(dateSpan);
+      meta.appendChild(starSpan);
+
+      body.appendChild(h3);
+      body.appendChild(place);
+      body.appendChild(meta);
+      card.appendChild(body);
+      g.appendChild(card);
+    });
+  }
+
+  function renderAll(){
+    renderMarkers();
+    renderGallery();
+    refreshStats();
+  }
+
+  /* ============ Détail ============ */
+  var detailOverlay = document.getElementById("detailOverlay");
+  var detailContent = document.getElementById("detailContent");
+  var currentDetailId = null;
+
+  function openDetail(id){
+    var entry = entries.find(function(e){return e.id===id;});
+    if(!entry) return;
+    currentDetailId = id;
+    var html = "";
+    if(entry.photos && entry.photos.length){
+      html += '<div class="detail-photos" id="detailPhotosWrap"></div>';
+    } else {
+      html += '<div class="ph-empty">🍵</div>';
+    }
+    html += '<h2>'+escapeHtml(entry.name)+'</h2>';
+    html += '<p class="detail-place">'+escapeHtml(entry.city)+', '+escapeHtml(entry.country)+'</p>';
+    html += '<p class="detail-date">'+formatDate(entry.date)+(entry.rating ? ' · <span class="stars">'+ratingStars(entry.rating)+'</span>' : '')+'</p>';
+    if(entry.note) html += '<p class="detail-note">'+escapeHtml(entry.note)+'</p>';
+    detailContent.innerHTML = html;
+    detailOverlay.classList.add("open");
+    if(entry.photos && entry.photos.length){
+      var wrap = document.getElementById("detailPhotosWrap");
+      entry.photos.forEach(function(path){
+        var img = document.createElement("img");
+        img.alt = entry.name;
+        wrap.appendChild(img);
+        resolvePhotoUrl(path).then(function(url){ if(url) img.src = url; });
+      });
+    }
+  }
+  function closeDetail(){
+    detailOverlay.classList.remove("open");
+    currentDetailId = null;
+  }
+  function escapeHtml(s){
+    var div = document.createElement("div");
+    div.textContent = s || "";
+    return div.innerHTML;
+  }
+
+  document.getElementById("closeDetailBtn").addEventListener("click", closeDetail);
+  detailOverlay.addEventListener("click", function(e){ if(e.target===detailOverlay) closeDetail(); });
+
+  document.getElementById("deleteBtn").addEventListener("click", async function(){
+    if(!currentDetailId) return;
+    if(!confirm("Supprimer ce souvenir ?")) return;
+    var entry = entries.find(function(e){return e.id===currentDetailId;});
+    var btn = this;
+    btn.disabled = true;
+    try{
+      await deleteEntryFromCloud(entry);
+      entries = entries.filter(function(e){return e.id!==currentDetailId;});
+      renderAll();
+      closeDetail();
+    }catch(err){
+      alert("La suppression a échoué : " + (err.message || err));
+    }finally{
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById("editBtn").addEventListener("click", function(){
+    if(!currentDetailId) return;
+    var entry = entries.find(function(e){return e.id===currentDetailId;});
+    closeDetail();
+    openForm(entry);
+  });
+
+  /* ============ Formulaire ajout / édition ============ */
+  var formOverlay = document.getElementById("formOverlay");
+  var entryForm = document.getElementById("entryForm");
+  var formTitle = document.getElementById("formTitle");
+  var pickerNote = document.getElementById("pickerNote");
+  var locateStatus = document.getElementById("locateStatus");
+  var currentLatLon = null;
+  var pickingOnMap = false;
+  var currentPhotos = [];
+  var currentRating = 0;
+
+  function openForm(editEntry){
+    entryForm.reset();
+    currentPhotos = [];
+    currentRating = 0;
+    updateRatingUI();
+    document.getElementById("photoPreview").innerHTML = "";
+    pickingOnMap = false;
+    pickerNote.classList.remove("active");
+    locateStatus.textContent = "";
+    locateStatus.className = "locate-status";
+
+    if(editEntry){
+      formTitle.textContent = "Modifier ce souvenir";
+      document.getElementById("entryId").value = editEntry.id;
+      document.getElementById("fName").value = editEntry.name;
+      document.getElementById("fCity").value = editEntry.city;
+      document.getElementById("fCountry").value = editEntry.country;
+      document.getElementById("fDate").value = editEntry.date || "";
+      document.getElementById("fNote").value = editEntry.note || "";
+      currentRating = editEntry.rating || 0;
+      updateRatingUI();
+      currentPhotos = (editEntry.photos || []).map(function(path){ return {type:"existing", path:path}; });
+      renderPhotoPreview();
+      currentLatLon = (typeof editEntry.lat === "number") ? {lat:editEntry.lat, lon:editEntry.lon} : null;
+      if(currentLatLon){
+        locateStatus.textContent = "Emplacement enregistré sur la carte ✓";
+        locateStatus.className = "locate-status ok";
+      }
+    } else {
+      formTitle.textContent = "+ Ajouter un matcha";
+      document.getElementById("entryId").value = "";
+      currentLatLon = null;
+    }
+    formOverlay.classList.add("open");
+  }
+  function closeForm(){
+    formOverlay.classList.remove("open");
+    pickingOnMap = false;
+    pickerNote.classList.remove("active");
+  }
+
+  document.getElementById("openAddBtn").addEventListener("click", function(){ openForm(null); });
+  document.getElementById("closeFormBtn").addEventListener("click", closeForm);
+  document.getElementById("cancelFormBtn").addEventListener("click", closeForm);
+  formOverlay.addEventListener("click", function(e){ if(e.target===formOverlay) closeForm(); });
+
+  /* --- notation --- */
+  var ratingInput = document.getElementById("ratingInput");
+  function updateRatingUI(){
+    Array.prototype.forEach.call(ratingInput.children, function(btn){
+      btn.classList.toggle("active", parseInt(btn.dataset.v,10) <= currentRating);
+    });
+  }
+  ratingInput.addEventListener("click", function(e){
+    if(e.target.tagName !== "BUTTON") return;
+    var v = parseInt(e.target.dataset.v,10);
+    currentRating = (currentRating === v) ? 0 : v; // re-cliquer désélectionne
+    updateRatingUI();
+  });
+
+  /* --- photos --- */
+  var photoDrop = document.getElementById("photoDrop");
+  var photoInput = document.getElementById("fPhotos");
+  photoDrop.addEventListener("click", function(){ photoInput.click(); });
+  photoInput.addEventListener("change", function(){
+    var files = Array.prototype.slice.call(photoInput.files);
+    files.forEach(function(file){
+      resizeImage(file, 900, 0.72, function(dataUrl){
+        currentPhotos.push({type:"new", dataUrl:dataUrl});
+        renderPhotoPreview();
+      });
+    });
+    photoInput.value = "";
+  });
+  function renderPhotoPreview(){
+    var wrap = document.getElementById("photoPreview");
+    wrap.innerHTML = "";
+    currentPhotos.forEach(function(item, idx){
+      var ph = document.createElement("div");
+      ph.className = "ph";
+      var img = document.createElement("img");
+      if(item.type === "new"){
+        img.src = item.dataUrl;
+      } else {
+        resolvePhotoUrl(item.path).then(function(url){ if(url) img.src = url; });
+      }
+      var rm = document.createElement("button");
+      rm.type = "button";
+      rm.textContent = "×";
+      rm.addEventListener("click", function(){
+        currentPhotos.splice(idx,1);
+        renderPhotoPreview();
+      });
+      ph.appendChild(img);
+      ph.appendChild(rm);
+      wrap.appendChild(ph);
+    });
+  }
+  function resizeImage(file, maxSize, quality, cb){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var img = new Image();
+      img.onload = function(){
+        var w = img.width, h = img.height;
+        if(w > h && w > maxSize){ h = h*(maxSize/w); w = maxSize; }
+        else if(h > maxSize){ w = w*(maxSize/h); h = maxSize; }
+        var canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img,0,0,w,h);
+        cb(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /* --- géolocalisation : dictionnaire local + option API en ligne + clic sur la carte --- */
+  var fCity = document.getElementById("fCity");
+  var fCountry = document.getElementById("fCountry");
+
+  function tryLocalMatch(){
+    var cityKey = normalize(fCity.value);
+    var direct = CITY_COORDS[cityKey];
+    if(direct){
+      currentLatLon = {lat:direct[0], lon:direct[1]};
+      locateStatus.textContent = "Emplacement trouvé automatiquement ✓";
+      locateStatus.className = "locate-status ok";
+      return true;
+    }
+    return false;
+  }
+
+  var geocodeTimer = null;
+  function attemptGeocode(){
+    if(!fCity.value.trim()) return;
+    if(tryLocalMatch()) return;
+
+    locateStatus.textContent = "Recherche de l'emplacement…";
+    locateStatus.className = "locate-status pending";
+
+    // Amélioration progressive : fonctionne si le site est hébergé normalement
+    // (les aperçus internes de Claude bloquent les requêtes réseau externes).
+    var query = encodeURIComponent(fCity.value + ", " + fCountry.value);
+    var controller = ("AbortController" in window) ? new AbortController() : null;
+    var timeout = setTimeout(function(){ if(controller) controller.abort(); }, 4000);
+
+    fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q="+query, {
+      signal: controller ? controller.signal : undefined
+    }).then(function(r){ return r.json(); })
+      .then(function(data){
+        clearTimeout(timeout);
+        if(data && data[0]){
+          currentLatLon = {lat:parseFloat(data[0].lat), lon:parseFloat(data[0].lon)};
+          locateStatus.textContent = "Emplacement trouvé automatiquement ✓";
+          locateStatus.className = "locate-status ok";
+        } else {
+          offerManualPlacement();
+        }
+      })
+      .catch(function(){
+        clearTimeout(timeout);
+        offerManualPlacement();
+      });
+  }
+  function offerManualPlacement(){
+    locateStatus.textContent = "Lieu introuvable automatiquement — touche la carte pour le placer toi-même.";
+    locateStatus.className = "locate-status";
+    enableMapPicking();
+  }
+  fCity.addEventListener("blur", function(){
+    clearTimeout(geocodeTimer);
+    geocodeTimer = setTimeout(attemptGeocode, 150);
+  });
+
+  function enableMapPicking(){
+    pickingOnMap = true;
+    pickerNote.classList.add("active");
+    formOverlay.classList.remove("open");
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+
+  mapEl.addEventListener("click", function(ev){
+    if(!pickingOnMap) return;
+    var pt = svgPoint(ev.clientX, ev.clientY);
+    // on retire le décalage/zoom courant de la carte pour retrouver la coordonnée réelle
+    var x = (pt.x - mapView.tx) / mapView.scale;
+    var y = (pt.y - mapView.ty) / mapView.scale;
+    var lon = x/1000*360 - 180;
+    var lat = 90 - y/500*180;
+    currentLatLon = {lat:lat, lon:lon};
+    pickingOnMap = false;
+    pickerNote.classList.remove("active");
+    formOverlay.classList.add("open");
+    locateStatus.textContent = "Emplacement placé sur la carte ✓";
+    locateStatus.className = "locate-status ok";
+  });
+
+  /* --- bouton pour placer manuellement à tout moment --- */
+  document.getElementById("fCountry").addEventListener("blur", function(){
+    if(!currentLatLon) { clearTimeout(geocodeTimer); geocodeTimer = setTimeout(attemptGeocode, 150); }
+  });
+
+  /* --- soumission --- */
+  var saveBtn = document.getElementById("saveBtn");
+  entryForm.addEventListener("submit", async function(e){
+    e.preventDefault();
+    if(!currentLatLon){
+      var found = tryLocalMatch();
+      if(!found){
+        alert("Je n'ai pas pu situer ce lieu automatiquement. Touche la carte pour le placer, puis réessaie d'enregistrer.");
+        enableMapPicking();
+        return;
+      }
+    }
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Enregistrement…";
+    try{
+      var finalPaths = [];
+      for(var i=0;i<currentPhotos.length;i++){
+        var item = currentPhotos[i];
+        if(item.type === "existing"){
+          finalPaths.push(item.path);
+        } else {
+          finalPaths.push(await uploadNewPhoto(item.dataUrl));
+        }
+      }
+      var id = document.getElementById("entryId").value || genId();
+      var entry = {
+        id:id,
+        name: document.getElementById("fName").value.trim(),
+        city: fCity.value.trim(),
+        country: fCountry.value.trim(),
+        date: document.getElementById("fDate").value,
+        lat: currentLatLon.lat,
+        lon: currentLatLon.lon,
+        photos: finalPaths,
+        note: document.getElementById("fNote").value.trim(),
+        rating: currentRating
+      };
+      await saveEntryToCloud(entry);
+      entries = await loadEntriesFromCloud();
+      renderAll();
+      closeForm();
+    }catch(err){
+      console.error(err);
+      alert("La sauvegarde a échoué : " + (err.message || err));
+    }finally{
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Enregistrer";
+    }
+  });
+
+  /* ============ Fermeture au clavier ============ */
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape"){
+      if(formOverlay.classList.contains("open")) closeForm();
+      if(detailOverlay.classList.contains("open")) closeDetail();
+    }
+  });
+
+  /* ============ Connexion (accès privé) ============ */
+  var authOverlay = document.getElementById("authOverlay");
+  var authForm = document.getElementById("authForm");
+  var authError = document.getElementById("authError");
+  var authSubmitBtn = document.getElementById("authSubmitBtn");
+  var authConfigWarning = document.getElementById("authConfigWarning");
+  var logoutBtn = document.getElementById("logoutBtn");
+
+  async function boot(){
+    entries = await loadEntriesFromCloud();
+    renderAll();
+  }
+
+  async function startApp(){
+    if(!configured){
+      authForm.style.display = "none";
+      authConfigWarning.style.display = "block";
+      return;
+    }
+    try{
+      var sessionRes = await sb.auth.getSession();
+      if(sessionRes.data && sessionRes.data.session){
+        authOverlay.classList.remove("open");
+        await boot();
+      }
+    }catch(err){
+      console.error(err);
+    }
+    // sinon, l'écran de connexion (ouvert par défaut dans le HTML) reste affiché
+  }
+
+  authForm.addEventListener("submit", async function(e){
+    e.preventDefault();
+    authError.textContent = "";
+    authSubmitBtn.disabled = true;
+    authSubmitBtn.textContent = "Connexion…";
+    try{
+      var email = document.getElementById("authEmail").value.trim();
+      var password = document.getElementById("authPassword").value;
+      var res = await sb.auth.signInWithPassword({email:email, password:password});
+      if(res.error){
+        authError.textContent = "E-mail ou mot de passe incorrect.";
+      } else {
+        authOverlay.classList.remove("open");
+        await boot();
+      }
+    }catch(err){
+      authError.textContent = "Connexion impossible (vérifie ta connexion internet).";
+    }finally{
+      authSubmitBtn.disabled = false;
+      authSubmitBtn.textContent = "Se connecter";
+    }
+  });
+
+  logoutBtn.addEventListener("click", async function(){
+    if(sb) await sb.auth.signOut();
+    location.reload();
+  });
+
+  startApp();
+})();
+</script>
+</body>
+</html>
